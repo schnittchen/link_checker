@@ -7,14 +7,17 @@ class Fetcher
   Response = Struct.new(:status, :body)
 
   def call(uri)
-    10.times do |i|
-
-      if i > 0
-        puts "try #{i+1} for #{uri}"
+    retry_with_backoff do |try_num|
+      if try_num > 1
+        puts "try #{try_num} for #{uri}"
       end
 
+      puts uri.to_s
+
+      conn = Faraday.new(uri)
+
       response = begin
-        Faraday.get(uri) # connection problems occur as exceptions of the adapter
+        conn.get # connection problems occur as exceptions of the adapter
       rescue => e
         puts e.message
         nil
@@ -22,12 +25,20 @@ class Fetcher
 
       if response
         return Response.new(response.status, response.body)
-      else
-        sleep 2 ** i
       end
     end
 
     Response.new(0, "retry count exceeded")
+  end
+
+  private
+
+  def retry_with_backoff
+    10.times do |i|
+      yield i + 1
+      sleep 2 ** i
+    end
+    false
   end
 
 end
