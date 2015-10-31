@@ -63,7 +63,6 @@ class Instance
   # both args are absolute (except from_uri, which may be virtual root)
   def handle_uri(uri, from_uri)
     uri = uri.normalize
-    return if skip_uri?(uri, from_uri)
 
     new_report = nil
 
