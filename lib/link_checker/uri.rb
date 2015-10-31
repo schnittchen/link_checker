@@ -31,7 +31,7 @@ class Uri
   end
 
   def initialize(str)
-    @str
+    @str = str
   end
 
   def virtual_root?
