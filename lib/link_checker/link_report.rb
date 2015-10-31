@@ -13,7 +13,11 @@ class LinkReport
   attr_accessor :error_message
 
   def status_success?
-    @status == 200
+    status == 200
+  end
+
+  def crawled?
+    status || error_message
   end
 
   def skip?
