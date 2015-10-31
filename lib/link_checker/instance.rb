@@ -36,19 +36,23 @@ class Instance
     uri = uri.normalize
     return if skip_uri?(uri, from_uri)
 
-    report =
-      @mtx.synchronize do
-        report =
-          @link_reports[uri.to_s] ||=
-            LinkReport.new(uri, skip_uri?(uri, from_uri))
+    new_report = nil
 
-        report.references << from_uri
-        report
+    @mtx.synchronize do
+      unless report = @link_reports[uri.to_s]
+        report = @link_reports[uri.to_s] =
+          LinkReport.new(uri, skip_uri?(uri, from_uri))
+        new_report = report
       end
 
-    @pool_queue.push_job do
-      crawl_uri(uri, report)
-    end unless report.skip?
+      report.references << from_uri
+    end
+
+    if new_report && !new_report.skip?
+      @pool_queue.push_job do
+        crawl_uri(uri, new_report)
+      end
+    end
   end
 
   def skip_uri?(uri, from_uri)
