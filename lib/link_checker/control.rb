@@ -15,13 +15,13 @@ class Control
 
   def log_retry(try_num, uri)
     @mtx.synchronize do
-      @logger.warn "Try ##{try_num} for #{uri}"
+      @logger.warn "Try ##{try_num} for #{inspect_uri(uri)}"
     end
   end
 
   def log_retry_exceeded(uri)
     @mtx.synchronize do
-      @logger.error "Retry count exceeded, giving up on #{uri}"
+      @logger.error "Retry count exceeded, giving up on #{inspect_uri(uri)}"
     end
   end
 
@@ -37,8 +37,18 @@ class Control
         ("HTTP status #{link_report.status}" if link_report.status),
         link_report.error_message
       ].compact
-      @logger.error "#{details.join(' ')} for #{link_report.uri}"
+      @logger.error "#{details.join(' ')} for #{inspect_uri(link_report.uri)}"
     end
+  end
+
+  def log_status(status_report)
+    @logger.info "#{status_report.links_count} links, #{status_report.linkages_count} linkages, #{status_report.failures_count} failures. Running #{status_report.runtime_seconds}s"
+  end
+
+  private
+
+  def inspect_uri(uri)
+    uri.to_s.inspect
   end
 end
 

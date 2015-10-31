@@ -24,6 +24,8 @@ class Instance
   def run
     virtual_root = Uri::VirtualRoot.new
 
+    spawn_reporter_thread
+
     @roots.each do |root|
       root = Uri.new(root).to_absolute(virtual_root)
       handle_uri(root, virtual_root)
@@ -33,6 +35,30 @@ class Instance
   end
 
   private
+
+  StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :runtime_seconds)
+
+  def spawn_reporter_thread
+    Thread.new do
+      start_time = Time.now
+
+      loop do
+        sleep 10
+        status_report =
+          @mtx.synchronize do
+            crawled_reports = @link_reports.values.select(&:crawled?)
+            links_count = crawled_reports.count
+            linkages_count = crawled_reports.map { |lr| lr.references.count }.reduce(0, :+)
+            failures_count = crawled_reports.reject(&:status_success?).count
+            runtime_seconds = (Time.now - start_time).round
+
+            StatusReport.new(links_count, linkages_count, failures_count, runtime_seconds)
+          end
+
+        @control.log_status status_report
+      end
+    end
+  end
 
   # both args are absolute (except from_uri, which may be virtual root)
   def handle_uri(uri, from_uri)
