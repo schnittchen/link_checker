@@ -4,8 +4,38 @@ require 'pathname'
 module LinkChecker
 
 class Uri
+  class VirtualRoot
+    def to_s
+      raise ArgumentError
+    end
+
+    def virtual_root?
+      true
+    end
+
+    def valid?
+      false
+    end
+
+    def normalize
+      self
+    end
+
+    def to_absolute(*)
+      raise ArgumentError
+    end
+
+    def stdlib_uri
+      raise ArgumentError
+    end
+  end
+
   def initialize(str)
     @str
+  end
+
+  def virtual_root?
+    false
   end
 
   def to_s
@@ -56,7 +86,7 @@ class Uri
   def stdlib_uri
     return @stdlib_uri if defined?(@stdlib_uri)
 
-    @stdlin_uri = URI(@str) rescue nil
+    @stdlib_uri = URI(@str) rescue nil
   end
 end
 
