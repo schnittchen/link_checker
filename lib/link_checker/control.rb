@@ -41,8 +41,20 @@ class Control
     end
   end
 
+  def log_skip(link_report)
+    @mtx.synchronize do
+      @logger.info "Skipping #{link_report.uri}"
+    end
+  end
+
   def log_status(status_report)
-    @logger.info "#{status_report.links_count} links, #{status_report.linkages_count} linkages, #{status_report.failures_count} failures. Running #{status_report.runtime_seconds}s"
+    message = [
+      "#{status_report.links_count} links",
+      "#{status_report.linkages_count} linkages",
+      "#{status_report.failures_count} failures",
+      "#{status_report.skips_count} skipped"
+    ].join(', ') + ". Running #{status_report.runtime_seconds}s"
+    @logger.info message
   end
 
   private

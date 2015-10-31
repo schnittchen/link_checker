@@ -36,7 +36,7 @@ class Instance
 
   private
 
-  StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :runtime_seconds)
+  StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :skips_count, :runtime_seconds)
 
   def spawn_reporter_thread
     Thread.new do
@@ -46,13 +46,14 @@ class Instance
         sleep 10
         status_report =
           @mtx.synchronize do
-            crawled_reports = @link_reports.values.select(&:crawled?)
+            crawled_reports = @link_reports.values.reject(&:pending?)
             links_count = crawled_reports.count
             linkages_count = crawled_reports.map { |lr| lr.references.count }.reduce(0, :+)
             failures_count = crawled_reports.reject(&:status_success?).count
+            skips_count = crawled_reports.count(&:skip?)
             runtime_seconds = (Time.now - start_time).round
 
-            StatusReport.new(links_count, linkages_count, failures_count, runtime_seconds)
+            StatusReport.new(links_count, linkages_count, failures_count, skips_count, runtime_seconds)
           end
 
         @control.log_status status_report
@@ -76,9 +77,13 @@ class Instance
       report.references << from_uri
     end
 
-    if new_report && !new_report.skip?
-      @pool_queue.push_job do
-        crawl_uri(uri, new_report)
+    if new_report
+      if new_report.skip?
+        @control.log_skip(new_report)
+      else
+        @pool_queue.push_job do
+          crawl_uri(uri, new_report)
+        end
       end
     end
   end

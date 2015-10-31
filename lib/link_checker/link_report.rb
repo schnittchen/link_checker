@@ -16,8 +16,8 @@ class LinkReport
     status == 200
   end
 
-  def crawled?
-    status || error_message
+  def pending?
+    !skip? && !status && !error_message
   end
 
   def skip?
