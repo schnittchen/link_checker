@@ -36,7 +36,7 @@ class Instance
 
   private
 
-  StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :skips_count, :runtime_seconds)
+  StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :skips_count, :queue_length, :runtime_seconds)
 
   def spawn_reporter_thread
     Thread.new do
@@ -51,9 +51,10 @@ class Instance
             linkages_count = crawled_reports.map { |lr| lr.references.count }.reduce(0, :+)
             failures_count = crawled_reports.reject(&:status_success?).count
             skips_count = crawled_reports.count(&:skip?)
+            queue_length = @pool_queue.length
             runtime_seconds = (Time.now - start_time).round
 
-            StatusReport.new(links_count, linkages_count, failures_count, skips_count, runtime_seconds)
+            StatusReport.new(links_count, linkages_count, failures_count, skips_count, queue_length, runtime_seconds)
           end
 
         @control.log_status status_report

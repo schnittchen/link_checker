@@ -52,7 +52,8 @@ class Control
       "#{status_report.links_count} links",
       "#{status_report.linkages_count} linkages",
       "#{status_report.failures_count} failures",
-      "#{status_report.skips_count} skipped"
+      "#{status_report.skips_count} skipped",
+      "#{status_report.queue_length} queued"
     ].join(', ') + ". Running #{status_report.runtime_seconds}s"
     @logger.info message
   end

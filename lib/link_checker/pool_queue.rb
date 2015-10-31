@@ -20,6 +20,10 @@ class PoolQueue
     @queue << callable
   end
 
+  def length
+    @queue.length
+  end
+
   def finished?
     @queue.empty? && @queue.num_waiting == @pool_size
   end
