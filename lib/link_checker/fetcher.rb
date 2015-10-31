@@ -17,6 +17,9 @@ class Fetcher
       puts uri.to_s
 
       conn = Faraday.new(uri.to_s)
+      if uri.user
+        conn.basic_auth(uri.user, uri.password)
+      end
 
       response = begin
         conn.get # connection problems occur as exceptions of the adapter

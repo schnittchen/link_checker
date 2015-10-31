@@ -17,6 +17,14 @@ class Uri
       false
     end
 
+    def user
+      nil
+    end
+
+    def password
+      nil
+    end
+
     def same_host_and_scheme?(*)
       raise ArgumentError
     end
@@ -48,6 +56,14 @@ class Uri
 
   def valid?
     !!stdlib_uri
+  end
+
+  def user
+    stdlib_uri.user if valid?
+  end
+
+  def password
+    stdlib_uri.password if valid?
   end
 
   def same_host_and_scheme?(uri)
