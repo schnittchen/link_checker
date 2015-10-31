@@ -1,3 +1,4 @@
+require 'link_checker/control'
 require 'link_checker/pool_queue'
 require 'link_checker/link_report'
 require 'link_checker/fetcher'
@@ -8,13 +9,15 @@ module LinkChecker
 
 class Instance
   def initialize
+    @control = Control.new
+
     @roots = []
 
     @mtx = Mutex.new
     @link_reports = {} # keyed by URI
 
     @pool_queue = PoolQueue.new(10)
-    @fetcher = Fetcher.new
+    @fetcher = Fetcher.new(@control)
   end
   attr_reader :roots, :link_reports
 
@@ -72,6 +75,8 @@ class Instance
       page.uris.each do |new_uri|
         handle_uri(new_uri, uri)
       end
+    else
+      @control.log_failed_report(report)
     end
   end
 end

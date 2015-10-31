@@ -6,15 +6,15 @@ class Fetcher
 
   Response = Struct.new(:status, :body, :error_message)
 
+  def initialize(control)
+    @control = control
+  end
+
   def call(uri)
     return Response.new(nil, nil, "invalid URL") unless uri.valid?
 
     retry_with_backoff do |try_num|
-      if try_num > 1
-        puts "try #{try_num} for #{uri}"
-      end
-
-      puts uri.to_s
+      @control.log_retry(try_num, uri) if try_num > 1
 
       conn = Faraday.new(uri.to_s)
       if uri.user
@@ -24,7 +24,7 @@ class Fetcher
       response = begin
         conn.get # connection problems occur as exceptions of the adapter
       rescue => e
-        puts e.message
+        @control.log_fetch_exception_message(e.message)
         nil
       end
 
@@ -33,6 +33,7 @@ class Fetcher
       end
     end
 
+    @control.log_retry_exceeded(uri)
     Response.new(nil, nil, "retry count exceeded")
   end
 

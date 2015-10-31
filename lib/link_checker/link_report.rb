@@ -8,7 +8,7 @@ class LinkReport
     @skip = skip
   end
 
-  attr_reader :references
+  attr_reader :uri, :references
   attr_accessor :status
   attr_accessor :error_message
 
