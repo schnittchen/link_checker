@@ -24,7 +24,7 @@ class Instance
   def run
     virtual_root = Uri::VirtualRoot.new
 
-    spawn_reporter_thread
+    spawn_reporter_thread(Time.now)
 
     @roots.each do |root|
       root = Uri.new(root).to_absolute(virtual_root)
@@ -46,28 +46,27 @@ class Instance
 
   StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :skips_count, :queue_length, :runtime_seconds)
 
-  def spawn_reporter_thread
+  def spawn_reporter_thread(start_time)
     Thread.new do
-      start_time = Time.now
-
       loop do
         sleep 10
-        status_report =
-          @mtx.synchronize do
-            reports = @link_reports.values
-
-            links_count = reports.count
-            linkages_count = reports.map { |lr| lr.references.count }.reduce(0, :+)
-            failures_count = reports.count(&:failed?)
-            skips_count = reports.count(&:skip?)
-            queue_length = @pool_queue.length
-            runtime_seconds = (Time.now - start_time).round
-
-            StatusReport.new(links_count, linkages_count, failures_count, skips_count, queue_length, runtime_seconds)
-          end
-
-        @control.log_status status_report
+        @control.log_status build_status_report(start_time)
       end
+    end
+  end
+
+  def build_status_report(start_time)
+    @mtx.synchronize do
+      reports = @link_reports.values
+
+      links_count = reports.count
+      linkages_count = reports.map { |lr| lr.references.count }.reduce(0, :+)
+      failures_count = reports.count(&:failed?)
+      skips_count = reports.count(&:skip?)
+      queue_length = @pool_queue.length
+      runtime_seconds = (Time.now - start_time).round
+
+      StatusReport.new(links_count, linkages_count, failures_count, skips_count, queue_length, runtime_seconds)
     end
   end
 
