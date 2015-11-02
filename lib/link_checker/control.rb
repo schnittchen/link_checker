@@ -8,6 +8,7 @@ class Control
     @mtx = Mutex.new
     @logger = Logger.new($stdout)
   end
+  attr_reader :logger
 
   def set_logger(logger)
     @logger = logger

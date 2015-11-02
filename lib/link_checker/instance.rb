@@ -34,6 +34,14 @@ class Instance
     @pool_queue.wait_until_finished
   end
 
+  def logger
+    @control.logger
+  end
+
+  def set_logger(logger)
+    @control.set_logger logger
+  end
+
   private
 
   StatusReport = Struct.new(:links_count, :linkages_count, :failures_count, :skips_count, :queue_length, :runtime_seconds)
