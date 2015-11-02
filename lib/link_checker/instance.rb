@@ -24,7 +24,8 @@ class Instance
   def run
     virtual_root = Uri::VirtualRoot.new
 
-    spawn_reporter_thread(Time.now)
+    start_time = Time.now
+    spawn_reporter_thread start_time
 
     @roots.each do |root|
       root = Uri.new(root).to_absolute(virtual_root)
@@ -32,6 +33,8 @@ class Instance
     end
 
     @pool_queue.wait_until_finished
+
+    @control.log_finished build_status_report(start_time)
   end
 
   def logger
