@@ -56,7 +56,7 @@ class Control
       "#{status_report.skips_count} skipped",
       "#{status_report.queue_length} queued"
     ].join(', ') + ". Running #{status_report.runtime_seconds}s"
-    @logger.info message
+    @logger.warn message
   end
 
   private
