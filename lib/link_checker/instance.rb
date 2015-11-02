@@ -54,11 +54,12 @@ class Instance
         sleep 10
         status_report =
           @mtx.synchronize do
-            crawled_reports = @link_reports.values.reject(&:pending?)
-            links_count = crawled_reports.count
-            linkages_count = crawled_reports.map { |lr| lr.references.count }.reduce(0, :+)
-            failures_count = crawled_reports.reject(&:status_success?).count
-            skips_count = crawled_reports.count(&:skip?)
+            reports = @link_reports.values
+
+            links_count = reports.count
+            linkages_count = reports.map { |lr| lr.references.count }.reduce(0, :+)
+            failures_count = reports.count(&:failed?)
+            skips_count = reports.count(&:skip?)
             queue_length = @pool_queue.length
             runtime_seconds = (Time.now - start_time).round
 
