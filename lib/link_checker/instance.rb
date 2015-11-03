@@ -4,6 +4,7 @@ require 'link_checker/link_report'
 require 'link_checker/fetcher'
 require 'link_checker/page'
 require 'link_checker/uri'
+require 'link_checker/csv_exporter'
 
 module LinkChecker
 
@@ -33,8 +34,10 @@ class Instance
     end
 
     @pool_queue.wait_until_finished
-
     @control.log_finished build_status_report(start_time)
+
+    exporter = CsvExporter.new(@link_reports.values, 'link_checker_export', with_references: true)
+    exporter.call
   end
 
   def logger

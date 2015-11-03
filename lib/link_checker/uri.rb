@@ -6,7 +6,7 @@ module LinkChecker
 class Uri
   class VirtualRoot
     def to_s
-      raise ArgumentError
+      "starting point"
     end
 
     def virtual_root?
