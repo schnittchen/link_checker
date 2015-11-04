@@ -1,5 +1,4 @@
 require 'uri'
-require 'pathname'
 
 module LinkChecker
 
@@ -33,8 +32,8 @@ class Uri
       self
     end
 
-    def to_absolute(*)
-      raise ArgumentError
+    def merge(uri_string)
+      Uri.new(uri_string)
     end
 
     def stdlib_uri
@@ -87,17 +86,10 @@ class Uri
     end
   end
 
-  def to_absolute(from_uri)
-    return self unless valid?
-    return self if absolute?
+  def merge(uri_string)
+    raise ArgumentError unless valid?
 
-    raise ArgumentError unless from_uri.valid?
-    raise ArgumentError unless from_uri.absolute?
-
-    new_uri = from_uri.stdlib_uri.clone
-    path = Pathname(new_uri.path)
-    new_uri.path = path.join(Pathname(stdlib_uri.path)).to_s
-    self.class.new(new_uri.to_s)
+    self.class.new(stdlib_uri.merge(uri_string).to_s)
   end
 
   def absolute?

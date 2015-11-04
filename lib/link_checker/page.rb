@@ -13,7 +13,7 @@ class Page
       # TODO there's more to referencing than hrefs
       *a_hrefs
     ].map { |str|
-      Uri.new(str).to_absolute(@uri)
+      @uri.merge(str)
     }
   end
 
