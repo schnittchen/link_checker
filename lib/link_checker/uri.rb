@@ -74,9 +74,10 @@ class Uri
 
   def normalize
     if stdlib_uri = stdlib_uri()
-      if stdlib_uri.query
+      if stdlib_uri.query || stdlib_uri.fragment
         stdlib_uri = stdlib_uri.clone
         stdlib_uri.query = nil
+        stdlib_uri.fragment = nil
         self.class.new(stdlib_uri.to_s)
       else
         self
