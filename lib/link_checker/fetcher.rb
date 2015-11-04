@@ -4,7 +4,7 @@ module LinkChecker
 
 class Fetcher
 
-  Response = Struct.new(:status, :body, :error_message)
+  Response = Struct.new(:status, :body, :error_message, :location_header)
 
   def initialize(control)
     @control = control
@@ -29,7 +29,7 @@ class Fetcher
       end
 
       if response
-        return Response.new(response.status, response.body)
+        return Response.new(response.status, response.body, nil, response['location'])
       end
     end
 
