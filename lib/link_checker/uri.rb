@@ -91,17 +91,24 @@ class Uri
 
     # Garbage in, garbage out: if uri_string is not a valid URI, we cannot
     # merge. Best thing we can do is to return the other, invalid Uri
-    possibly_bad_uri = self.class.new(uri_string)
-    return possibly_bad_uri unless possibly_bad_uri.valid?
+    mergee_uri = self.class.new(uri_string)
+    return mergee_uri unless mergee_uri.valid?
+
+    mergee_uri = mergee_uri.stdlib_uri
+    mergee_fragment = mergee_uri.fragment
+    mergee_uri.fragment = nil
 
     # see https://github.com/lostisland/faraday_middleware/blob/9a49b369c39cbef5525f4fda7e01cf8f5eb09e24/lib/faraday_middleware/response/follow_redirects.rb#L120,
-    # where this is more than inspired from
+    # where this is more than inspired from. Does not respect fragments, so they are channeled around this.
     uri_unsafe = /[^\-_.!~*'()a-zA-Z\d;\/?:@&=+$,\[\]%]/
-    uri_string = uri_string.gsub(uri_unsafe) { |match|
+    uri_string = mergee_uri.to_s.gsub(uri_unsafe) { |match|
       '%' + match.unpack('H2' * match.bytesize).join('%').upcase
     }
 
-    self.class.new(stdlib_uri.merge(uri_string).to_s)
+    mergee_uri = URI(uri_string)
+    mergee_uri.fragment = mergee_fragment
+
+    self.class.new(stdlib_uri.merge(mergee_uri.to_s).to_s)
   end
 
   def absolute?
