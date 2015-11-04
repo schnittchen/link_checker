@@ -29,8 +29,19 @@ class Instance
     spawn_reporter_thread start_time
 
     @roots.each do |root|
-      root = Uri.new(root).to_absolute(virtual_root)
-      handle_uri(root, virtual_root)
+      uri = Uri.new(root)
+      if uri.absolute?
+        handle_uri(uri, virtual_root)
+      else
+        @mtx.synchronize do
+          unless @link_reports.key?(uri.to_s)
+            report = LinkReport.new(uri, false)
+            report.error_message = "invalid root (must be absolute)"
+            report.references << virtual_root
+            @link_reports[uri.to_s] = report
+          end
+        end
+      end
     end
 
     @pool_queue.wait_until_finished
