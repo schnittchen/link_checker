@@ -103,10 +103,6 @@ class Uri
   def absolute?
     raise ArgumentError unless valid?
 
-    if stdlib_uri.absolute?
-      binding.pry if stdlib_uri.path && !stdlib_uri.path.start_with?('/')
-    end
-
     # since stdlib uris have all been normalized, their path
     # is either nil (in which case it is probably a URI::Generic which we cannot handle)
     # or starts with "/". Hence, is suffices to check for presence of a scheme
