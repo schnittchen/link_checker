@@ -13,7 +13,7 @@ class Instance
   def initialize
     @control = Control.new
 
-    @roots = []
+    @start_urls = []
 
     @mtx = Mutex.new
     @link_reports = {} # keyed by URI
@@ -21,7 +21,7 @@ class Instance
     @pool_queue = PoolQueue.new(10)
     @fetcher = Fetcher.new(@control)
   end
-  attr_reader :roots, :link_reports
+  attr_reader :start_urls, :link_reports
 
   def authenticate(username, password)
     @control.authentication = Control::Authentication.new(username, password)
@@ -33,7 +33,7 @@ class Instance
     start_time = Time.now
     spawn_reporter_thread start_time
 
-    @roots.each do |root|
+    @start_urls.each do |root|
       uri = Uri.new(root)
       if uri.absolute?
         handle_uri(uri, virtual_root, 0)
@@ -41,7 +41,7 @@ class Instance
         @mtx.synchronize do
           unless @link_reports.key?(uri.to_s)
             report = LinkReport.new(uri, false)
-            report.error_message = "invalid root (must be absolute)"
+            report.error_message = "invalid start_url (must be absolute)"
             report.references << virtual_root
             @link_reports[uri.to_s] = report
           end
