@@ -17,8 +17,8 @@ class Fetcher
       @control.log_retry(try_num, uri) if try_num > 1
 
       conn = Faraday.new(uri.to_s)
-      if uri.user
-        conn.basic_auth(uri.user, uri.password)
+      if authentication = @control.authentication
+        conn.basic_auth(authentication.user, authentication.password)
       end
 
       response = begin

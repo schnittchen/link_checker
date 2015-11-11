@@ -16,8 +16,12 @@ class LinkReport
     status == 200
   end
 
+  def status_redirect?
+    [301, 302, 303, 307].include?(status)
+  end
+
   def failed?
-    crawled? && !status_success?
+    crawled? && !(status_success? || status_redirect?)
   end
 
   def pending?

@@ -8,7 +8,7 @@ class CsvRowsGenerator
 
   def header_row
     if with_references?
-      ["URI", "status", "HTTP status", "error message", "reference URI", "reference count"]
+      ["URI", "status", "HTTP status", "error message", "ref URI", "ref info", "ref count"]
     else
       ["URI", "status", "HTTP status", "error message"]
     end
@@ -20,6 +20,8 @@ class CsvRowsGenerator
         'failed'
       elsif link_report.skip?
         'skipped'
+      elsif link_report.status_redirect?
+        'followed'
       else
         'ok'
       end
@@ -34,12 +36,11 @@ class CsvRowsGenerator
     if with_references?
       link_report
         .references
-        .map(&:to_s)
-        .each_with_object({}) { |uri_str, hash|
-          hash[uri_str] ||= 0
-          hash[uri_str] += 1
-        }.map do |uri_str, count|
-          [*report_row, uri_str, count]
+        .group_by(&:group_key)
+        .map { |_, references| [references.first, references.count] }
+        .to_h
+        .map do |reference, count|
+          [*report_row, reference.uri.to_s, reference.info, count]
         end
     else
       report_row

@@ -4,6 +4,7 @@ require 'link_checker/link_report'
 require 'link_checker/fetcher'
 require 'link_checker/page'
 require 'link_checker/uri'
+require 'link_checker/reference'
 require 'link_checker/csv_exporter'
 
 module LinkChecker
@@ -22,8 +23,12 @@ class Instance
   end
   attr_reader :roots, :link_reports
 
+  def authenticate(username, password)
+    @control.authentication = Control::Authentication.new(username, password)
+  end
+
   def run
-    virtual_root = Uri::VirtualRoot.new
+    virtual_root = Reference.root
 
     start_time = Time.now
     spawn_reporter_thread start_time
@@ -31,7 +36,7 @@ class Instance
     @roots.each do |root|
       uri = Uri.new(root)
       if uri.absolute?
-        handle_uri(uri, virtual_root)
+        handle_uri(uri, virtual_root, 0)
       else
         @mtx.synchronize do
           unless @link_reports.key?(uri.to_s)
@@ -88,7 +93,7 @@ class Instance
   end
 
   # both args are absolute (except from_uri, which may be virtual root)
-  def handle_uri(uri, from_uri)
+  def handle_uri(uri, reference, redirect_count)
     uri = uri.normalize
 
     new_report = nil
@@ -96,32 +101,34 @@ class Instance
     @mtx.synchronize do
       unless report = @link_reports[uri.to_s]
         report = @link_reports[uri.to_s] =
-          LinkReport.new(uri, skip_uri?(uri, from_uri))
+          LinkReport.new(uri, skip_uri?(uri, reference))
         new_report = report
       end
 
-      report.references << from_uri
+      report.references << reference
     end
 
     if new_report
       if new_report.skip?
         @control.log_skip(new_report)
+      elsif redirect_count > 2 # TODO hard-coded
+        new_report.error_message = "redirect limit exceeded"
       else
         @pool_queue.push_job do
-          crawl_uri(uri, new_report)
+          crawl_uri(uri, new_report, redirect_count)
         end
       end
     end
   end
 
-  def skip_uri?(uri, from_uri)
-    return false if from_uri.virtual_root?
+  def skip_uri?(uri, reference)
+    return false if reference.root?
     return false if !uri.valid?
 
-    !uri.same_host_and_scheme?(from_uri)
+    !uri.same_host_and_scheme?(reference.uri)
   end
 
-  def crawl_uri(uri, report)
+  def crawl_uri(uri, report, redirect_count)
     response = @fetcher.call(uri)
     report.status = response.status
     report.error_message = response.error_message
@@ -129,8 +136,13 @@ class Instance
     if report.status_success?
       page = Page.new(uri, response.body)
       page.uris.each do |new_uri|
-        handle_uri(new_uri, uri)
+        reference = Reference.a_href(uri)
+        handle_uri(new_uri, reference, 0)
       end
+    elsif report.status_redirect?
+      new_uri = uri.merge(response.location_header)
+      reference = Reference.redirect(uri, response.status)
+      handle_uri(new_uri, reference, redirect_count + 1)
     else
       @control.log_failed_report(report)
     end

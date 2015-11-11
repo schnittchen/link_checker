@@ -7,8 +7,12 @@ class Control
   def initialize
     @mtx = Mutex.new
     @logger = Logger.new($stdout)
+    @authentication = nil
   end
   attr_reader :logger
+  attr_accessor :authentication
+
+  Authentication = Struct.new(:user, :password)
 
   def set_logger(logger)
     @logger = logger

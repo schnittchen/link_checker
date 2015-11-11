@@ -3,44 +3,6 @@ require 'uri'
 module LinkChecker
 
 class Uri
-  class VirtualRoot
-    def to_s
-      "starting point"
-    end
-
-    def virtual_root?
-      true
-    end
-
-    def valid?
-      false
-    end
-
-    def user
-      nil
-    end
-
-    def password
-      nil
-    end
-
-    def same_host_and_scheme?(*)
-      raise ArgumentError
-    end
-
-    def normalize
-      self
-    end
-
-    def merge(uri_string)
-      Uri.new(uri_string)
-    end
-
-    def stdlib_uri
-      raise ArgumentError
-    end
-  end
-
   def initialize(str)
     @str = str
   end
