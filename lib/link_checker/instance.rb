@@ -38,6 +38,7 @@ class Instance
       if uri.absolute?
         handle_uri(uri, virtual_root, 0)
       else
+        # there is some duplication here?
         @mtx.synchronize do
           unless @link_reports.key?(uri.to_s)
             report = LinkReport.new(uri, false)

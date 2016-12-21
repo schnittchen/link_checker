@@ -32,6 +32,9 @@ class Uri
     raise ArgumentError unless uri.valid?
     stdlib_uri.scheme == uri.stdlib_uri.scheme &&
       stdlib_uri.host == uri.stdlib_uri.host
+  rescue
+    binding.pry
+    puts
   end
 
   def normalize
